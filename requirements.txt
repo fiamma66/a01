@@ -1,0 +1,7 @@
+requests
+pandas
+sqlalchemy
+bs4
+selenium
+colorlog
+psycopg2
