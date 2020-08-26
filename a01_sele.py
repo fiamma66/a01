@@ -305,6 +305,11 @@ class VideoCatch:
             for line in p.stdout:
                 print(line)
 
+        delete_list = self.path.rglob('*.ts')
+        for ts in delete_list:
+            logger.debug('Delete {}'.format(ts.name))
+            ts.unlink()
+
     def _post_update_status(self):
         command = [
             'ffprobe',
