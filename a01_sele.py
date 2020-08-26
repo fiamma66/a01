@@ -12,6 +12,7 @@ import datetime
 from sqlalchemy import create_engine, Table, MetaData
 import fcntl
 import random
+from ip import get_ip
 
 # import logging
 # HTML = 'https://www.av01.tv/videos?o=mr'
@@ -21,6 +22,8 @@ engine = create_engine('postgresql+psycopg2://trinity:trinity@10.140.0.2:5432/ja
 meta = MetaData()
 jav = Table('jav_index', meta, autoload=True, autoload_with=engine)
 
+main_host = '10.140.0.2'
+main_user = 'fiamma0320'
 
 logger = log.getLogger(__name__)
 # logger.level = logging.DEBUG
@@ -82,6 +85,8 @@ class VideoCatch:
 
         self.lock_file = open(folder_path / 'driver_lock', 'w+')
         self.retry_list = []
+
+        self.file = self.path / self.file_name
 
     def get_network_url(self):
         html = self.url
@@ -186,7 +191,7 @@ class VideoCatch:
                 f.write(h.content)
         # status Code 404 or 400
         elif h.status_code == 404:
-            logger.error('Cant find Chunk')
+            logger.debug('Cant find Chunk ! Ignore !')
             return
 
             # return 'Done By Reach Max Range !'
@@ -242,6 +247,8 @@ class VideoCatch:
 
         self._post_update_status()
 
+        self._post_scp()
+
     def _post_retry(self):
         manual_list = []
 
@@ -291,7 +298,7 @@ class VideoCatch:
             'aac_adtstoasc',
             '-c',
             'copy',
-            '{}'.format(str(self.path / self.file_name))
+            '{}'.format(str(self.file))
         ]
 
         with subprocess.Popen(command, universal_newlines=True, stdout=subprocess.PIPE, bufsize=1) as p:
@@ -307,7 +314,7 @@ class VideoCatch:
             'format=duration',
             '-of',
             'default=noprint_wrappers=1:nokey=1',
-            '{}'.format(str(self.path / self.file_name))
+            '{}'.format(str(self.file))
         ]
         logger.info('Getting Concat Video Duration')
 
@@ -323,6 +330,20 @@ class VideoCatch:
             update_rs = connection.execute(smt)
 
         logger.info('Rows Updated : {}'.format(update_rs.rowcount))
+
+    def _post_scp(self):
+        myip = get_ip()
+        command = [
+            'scp',
+            '-r'
+            '{}'.format(str(self.path)),
+            '{}@{}:{}'.format(main_user, main_host, str(self.path.absolute())),
+        ]
+
+        if myip != main_host:
+            with subprocess.Popen(command, universal_newlines=True, stdout=subprocess.PIPE, bufsize=1) as p:
+                for line in p.stdout:
+                    print(line)
 
 
 if __name__ == '__main__':
