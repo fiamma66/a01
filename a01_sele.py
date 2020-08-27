@@ -362,7 +362,7 @@ class VideoCatch:
         myip = get_ip()
         command = [
             'scp',
-            '-r'
+            '-r',
             '{}'.format(str(self.path.absolute())),
             '{}@{}:{}'.format(main_user, main_host, str(self.path.absolute())),
         ]
