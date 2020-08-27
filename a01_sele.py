@@ -364,7 +364,7 @@ class VideoCatch:
             'rsync',
             '-e',
             'ssh -o StrictHostKeyChecking=no',
-            '-avh',
+            '-avrh',
             '{}'.format(str(self.path.absolute())),
             '{}@{}:{}'.format(main_user, main_host, str(self.path.absolute())),
         ]
