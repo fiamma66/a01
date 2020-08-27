@@ -74,7 +74,7 @@ class VideoCatch:
     def __init__(self, url, sub_folder, chunk):
         self.max_range = chunk
         self.url = url
-        self.video_url = self.get_network_url()
+        self.video_url = None
         self.path = folder_path / sub_folder
         self.list_file = None
         self.name = sub_folder
@@ -136,6 +136,26 @@ class VideoCatch:
 
         return new_url
 
+    def _retry_api_url(self):
+        """
+
+        :return: Change class self.url
+        """
+
+        while True:
+            try:
+                fcntl.flock(self.lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                self.video_url = self.get_network_url()
+                logger.warning('Getting New URL : {}'.format(self.video_url))
+                fcntl.flock(self.lock_file, fcntl.LOCK_UN)
+                break
+
+            except OSError:
+                logger.warning('Driver Locked ! Waiting...')
+                time.sleep(120)
+                logger.warning('Exit Waiting Driver Lock')
+                break
+
     def download_and_check(self, url, _num, retry=False):
 
         # Downloading
@@ -154,19 +174,7 @@ class VideoCatch:
             logger.warning('Regetting ChunkURL !')
             logger.info('Getting File Lock')
 
-            while True:
-                try:
-                    fcntl.flock(self.lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                    self.url = self.get_network_url()
-                    fcntl.flock(self.lock_file, fcntl.LOCK_UN)
-                    break
-
-                except OSError:
-                    logger.warning('Driver Locked ! Waiting...')
-                    time.sleep(120)
-                    logger.warning('Exit Waiting Driver Lock')
-                    break
-
+            self._retry_api_url()
             # self.url = self.get_network_url()
             # global change
 
@@ -177,6 +185,7 @@ class VideoCatch:
             try:
                 h.content.decode('utf-8')
                 time.sleep(random.randint(1, 5))
+                logger.error('Response not BLOB ! Retry')
                 self.download_and_check(url, _num)
             except UnicodeDecodeError:
                 pass
@@ -195,6 +204,14 @@ class VideoCatch:
             return
 
             # return 'Done By Reach Max Range !'
+
+        elif h.status_code == 429:
+            # 429 too many requests
+            # Change request api url
+            logger.warning('Too Many Requests on Current API : {}'.format(self.video_url))
+            self._retry_api_url()
+
+            self.download_and_check(url, _num)
 
         else:
             if not retry:
@@ -230,6 +247,7 @@ class VideoCatch:
         # return 'Done'
 
     def run(self):
+        self.video_url = self.get_network_url()
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=13, thread_name_prefix='Crawl_Thread') as w:
             future = {w.submit(self.download_and_check,
