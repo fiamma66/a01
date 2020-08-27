@@ -48,20 +48,6 @@ g_header = {
 
 }
 
-driver = webdriver.Chrome(options=options)
-
-
-def p1080_or_720():
-    p_1080 = driver.find_element_by_css_selector('div.vjs-menu.vjs-lock-showing')
-    p_1080 = p_1080.find_element_by_css_selector('ul.vjs-menu-content')
-
-    try:
-        logger.info('Change to 1080P')
-        p_1080.find_element_by_xpath('//span[text()="1080p"]').click()
-    except common.exceptions.NoSuchElementException:
-        logger.info('Change to 720P')
-        p_1080.find_element_by_xpath('//span[text()="720p"]').click()
-
 
 def get_network_resources(_driver):
     resources = _driver.execute_script("return window.performance.getEntries();")
@@ -73,6 +59,7 @@ class VideoCatch:
 
     def __init__(self, url, sub_folder, chunk):
         self.max_range = chunk
+        self.driver = None
         self.url = url
         self.video_url = None
         self.path = folder_path / sub_folder
@@ -83,28 +70,41 @@ class VideoCatch:
         if not self.path.exists():
             self.path.mkdir(parents=True)
 
-        self.lock_file = open(folder_path / 'driver_lock', 'w+')
+        self.lock_file = folder_path / 'driver_lock'
         self.retry_list = []
 
         self.file = self.path / self.file_name
 
+    def p1080_or_720(self):
+        p_1080 = self.driver.find_element_by_css_selector('div.vjs-menu.vjs-lock-showing')
+        p_1080 = p_1080.find_element_by_css_selector('ul.vjs-menu-content')
+
+        try:
+            logger.info('Change to 1080P')
+            p_1080.find_element_by_xpath('//span[text()="1080p"]').click()
+        except common.exceptions.NoSuchElementException:
+            logger.info('Change to 720P')
+            p_1080.find_element_by_xpath('//span[text()="720p"]').click()
+
     def get_network_url(self):
+
+        self.driver = webdriver.Chrome(options=options)
 
         logger.info('Initializing Selenium Driver Open Page')
 
-        driver.get(self.url)
+        self.driver.get(self.url)
         logger.info('Success Open Page ')
 
         time.sleep(2)
         logger.info('PLAYING Button Click ')
-        driver.find_element_by_class_name('vjs-big-play-button').click()
+        self.driver.find_element_by_class_name('vjs-big-play-button').click()
         time.sleep(5)
 
         # Find Change 畫質
         while True:
             try:
                 # print('find 1080')
-                button_1080 = driver. \
+                button_1080 = self.driver. \
                     find_element_by_css_selector('button.vjs-menu-button.vjs-menu-button-popup.vjs-icon-cog.vjs-button')
                 # print(button_1080)
                 button_1080.click()
@@ -116,11 +116,11 @@ class VideoCatch:
 
             break
 
-        p1080_or_720()
+        self.p1080_or_720()
         time.sleep(10)
 
         logger.info('Getting Network Resource Log')
-        network = get_network_resources(driver)
+        network = get_network_resources(self.driver)
         new_url = ''
         for a in network:
             logger.debug(a.get('name'))
@@ -131,7 +131,7 @@ class VideoCatch:
                 new_url = matcher.group(1) + '{}' + matcher.group(3)
                 logger.debug('Success get url : {}'.format(new_url))
 
-        driver.close()
+        self.driver.close()
 
         self.video_url = new_url
 
@@ -142,18 +142,22 @@ class VideoCatch:
         """
 
         while True:
+            lock = open(self.lock_file, 'wb')
             try:
-                logger.warning('Locking File {}'.format(self.lock_file))
-                fcntl.flock(self.lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                # logger.warning('Locking File {}'.format(self.lock_file))
+
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 self.get_network_url()
                 logger.warning('Getting New URL : {}'.format(self.video_url))
-                fcntl.flock(self.lock_file, fcntl.LOCK_UN)
+                fcntl.flock(lock, fcntl.LOCK_UN)
+                lock.close()
                 break
 
             except Exception as e:
                 # Catch BlockIOError
-                logger.info(e)
+                logger.debug(e)
                 logger.warning('Driver Locked ! Waiting...')
+                lock.close()
                 time.sleep(120)
                 logger.warning('Exit Waiting Driver Lock')
                 break
