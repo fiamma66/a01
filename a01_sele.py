@@ -89,11 +89,10 @@ class VideoCatch:
         self.file = self.path / self.file_name
 
     def get_network_url(self):
-        html = self.url
 
         logger.info('Initializing Selenium Driver Open Page')
 
-        driver.get(html)
+        driver.get(self.url)
         logger.info('Success Open Page ')
 
         time.sleep(2)
@@ -134,7 +133,7 @@ class VideoCatch:
 
         driver.close()
 
-        return new_url
+        self.video_url = new_url
 
     def _retry_api_url(self):
         """
@@ -144,13 +143,16 @@ class VideoCatch:
 
         while True:
             try:
+                logger.warning('Locking File {}'.format(self.lock_file))
                 fcntl.flock(self.lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                self.video_url = self.get_network_url()
+                self.get_network_url()
                 logger.warning('Getting New URL : {}'.format(self.video_url))
                 fcntl.flock(self.lock_file, fcntl.LOCK_UN)
                 break
 
-            except OSError:
+            except Exception as e:
+                # Catch BlockIOError
+                logger.info(e)
                 logger.warning('Driver Locked ! Waiting...')
                 time.sleep(120)
                 logger.warning('Exit Waiting Driver Lock')
@@ -247,7 +249,7 @@ class VideoCatch:
         # return 'Done'
 
     def run(self):
-        self.video_url = self.get_network_url()
+        self.get_network_url()
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=13, thread_name_prefix='Crawl_Thread') as w:
             future = {w.submit(self.download_and_check,
@@ -350,7 +352,7 @@ class VideoCatch:
         logger.info('Rows Updated : {}'.format(update_rs.rowcount))
 
         logger.info('Delete ts File')
-        
+
         delete_list = self.path.rglob('*.ts')
         for ts in delete_list:
             logger.debug('Delete {}'.format(ts.name))
@@ -361,9 +363,10 @@ class VideoCatch:
         command = [
             'scp',
             '-r'
-            '{}'.format(str(self.path)),
+            '{}'.format(str(self.path.absolute())),
             '{}@{}:{}'.format(main_user, main_host, str(self.path.absolute())),
         ]
+        print(command)
 
         if myip != main_host:
             with subprocess.Popen(command, universal_newlines=True, stdout=subprocess.PIPE, bufsize=1) as p:
