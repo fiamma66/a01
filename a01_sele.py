@@ -361,8 +361,10 @@ class VideoCatch:
     def _post_scp(self):
         myip = get_ip()
         command = [
-            'scp',
-            '-r',
+            'rsync',
+            '-e',
+            'ssh -o StrictHostKeyChecking=no',
+            '-avh',
             '{}'.format(str(self.path.absolute())),
             '{}@{}:{}'.format(main_user, main_host, str(self.path.absolute())),
         ]
