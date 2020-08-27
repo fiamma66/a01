@@ -157,7 +157,7 @@ class VideoCatch:
                 # Catch BlockIOError
                 logger.debug(e)
                 logger.warning('Driver Locked ! Waiting...')
-                lock.close()
+                # lock.close()
                 time.sleep(120)
                 logger.warning('Exit Waiting Driver Lock')
                 break
