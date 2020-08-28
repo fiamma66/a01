@@ -379,6 +379,27 @@ class VideoCatch:
                 for line in p.stdout:
                     print(line)
 
+    def sp_rerun(self, sp):
+        self.get_network_url()
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=13, thread_name_prefix='Crawl_Thread') as w:
+            future = {w.submit(self.download_and_check,
+                               self.video_url.format(i),
+                               i) for i in range(sp, self.max_range)}
+            logger.debug(future)
+
+        logger.info('Complete ! Entering Post List Create')
+
+        self._post_retry()
+
+        self._post_run_list()
+
+        self._post_merge_file()
+
+        self._post_update_status()
+
+        self._post_scp()
+
 
 if __name__ == '__main__':
 
