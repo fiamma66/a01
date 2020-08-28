@@ -142,10 +142,10 @@ class VideoCatch:
         """
 
         while True:
-
+            lock = open(self.lock_file, 'wb')
             try:
                 # logger.warning('Locking File {}'.format(self.lock_file))
-                lock = open(self.lock_file, 'wb')
+
                 fcntl.lockf(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 self.get_network_url()
                 logger.warning('Getting New URL : {}'.format(self.video_url))
@@ -160,6 +160,8 @@ class VideoCatch:
                 # lock.close()
                 time.sleep(120)
                 logger.warning('Exit Waiting Driver Lock')
+
+                lock.close()
                 break
 
     def download_and_check(self, url, _num, retry=False):
