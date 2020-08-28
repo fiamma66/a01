@@ -59,7 +59,6 @@ class VideoCatch:
 
     def __init__(self, url, sub_folder, chunk):
         self.max_range = chunk
-        self.driver = None
         self.url = url
         self.video_url = None
         self.path = folder_path / sub_folder
@@ -75,8 +74,8 @@ class VideoCatch:
 
         self.file = self.path / self.file_name
 
-    def p1080_or_720(self):
-        p_1080 = self.driver.find_element_by_css_selector('div.vjs-menu.vjs-lock-showing')
+    def p1080_or_720(self, driver):
+        p_1080 = driver.find_element_by_css_selector('div.vjs-menu.vjs-lock-showing')
         p_1080 = p_1080.find_element_by_css_selector('ul.vjs-menu-content')
 
         try:
@@ -88,23 +87,23 @@ class VideoCatch:
 
     def get_network_url(self):
 
-        self.driver = webdriver.Chrome(options=options)
+        driver = webdriver.Chrome(options=options)
 
         logger.info('Initializing Selenium Driver Open Page')
 
-        self.driver.get(self.url)
+        driver.get(self.url)
         logger.info('Success Open Page ')
 
         time.sleep(2)
         logger.info('PLAYING Button Click ')
-        self.driver.find_element_by_class_name('vjs-big-play-button').click()
+        driver.find_element_by_class_name('vjs-big-play-button').click()
         time.sleep(5)
 
         # Find Change 畫質
         while True:
             try:
                 # print('find 1080')
-                button_1080 = self.driver. \
+                button_1080 = driver. \
                     find_element_by_css_selector('button.vjs-menu-button.vjs-menu-button-popup.vjs-icon-cog.vjs-button')
                 # print(button_1080)
                 button_1080.click()
@@ -116,11 +115,11 @@ class VideoCatch:
 
             break
 
-        self.p1080_or_720()
+        self.p1080_or_720(driver)
         time.sleep(10)
 
         logger.info('Getting Network Resource Log')
-        network = get_network_resources(self.driver)
+        network = get_network_resources(driver)
         new_url = ''
         for a in network:
             logger.debug(a.get('name'))
@@ -131,7 +130,7 @@ class VideoCatch:
                 new_url = matcher.group(1) + '{}' + matcher.group(3)
                 logger.debug('Success get url : {}'.format(new_url))
 
-        self.driver.close()
+        driver.close()
 
         self.video_url = new_url
 
