@@ -34,12 +34,6 @@ folder_path = pathlib.Path('av01')
 url_pattern = re.compile(r'(https?://cdn\.av01\.tv/v[0-9]/[0-9]*[a-z]*/.*/[a-z]*/[a-z]*[0-9]*[a-z]*-)([0-9]*)(-.*)',
                          re.IGNORECASE)
 
-# Selenium Option And Initialize
-options = webdriver.ChromeOptions()
-options.add_argument("--enable-javascript")
-options.add_argument("--headless")
-options.add_argument("--width=2560")
-options.add_argument("--height=1440")
 
 g_header = {
     'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) \
@@ -71,6 +65,11 @@ def p1080_or_720(driver):
 
 
 class VideoCatch:
+    # Selenium Option And Initialize
+    options = webdriver.ChromeOptions()
+    options.add_argument("--enable-javascript")
+    options.add_argument("--headless")
+    options.add_argument("--window-size=2560,1440")
 
     def __init__(self, url, sub_folder, chunk):
         self.max_range = chunk
@@ -91,7 +90,7 @@ class VideoCatch:
 
     def get_network_url(self):
 
-        driver = webdriver.Chrome(options=options)
+        driver = webdriver.Chrome(options=self.options)
 
         logger.info('Initializing Selenium Driver Open Page')
 
