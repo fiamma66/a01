@@ -38,6 +38,8 @@ url_pattern = re.compile(r'(https?://cdn\.av01\.tv/v[0-9]/[0-9]*[a-z]*/.*/[a-z]*
 options = webdriver.ChromeOptions()
 options.add_argument("--enable-javascript")
 options.add_argument("--headless")
+options.add_argument("--width=2560")
+options.add_argument("--height=1440")
 
 g_header = {
     'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) \
