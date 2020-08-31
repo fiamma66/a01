@@ -42,7 +42,8 @@ def get_crawl_list(html):
         for css in bs.select('div.col-sm-6.col-md-4.col-lg-4'):
             link = domain_name + css.find('a').get('href')
 
-            name = css.select('div.video-views.pull-left')[0].text.replace('\n', '')
+            # Name Update at 2020/08/31
+            name = css.select('div.video-views')[0].text.replace('\n', '')
 
             duration = css.select('div.duration')[0].text.replace('\n', '')
 
