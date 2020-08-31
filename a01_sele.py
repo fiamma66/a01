@@ -424,5 +424,5 @@ if __name__ == '__main__':
     logger.info('Now Crawling Name : {}'.format(rs[1]))
     logger.info('URL : {}'.format(rs[0]))
     size = math.ceil(rs[6] / 4)
-    # v = VideoCatch(rs[0], rs[1], size)
-    # v.run()
+    v = VideoCatch(rs[0], rs[1], size)
+    v.run()
