@@ -110,7 +110,7 @@ class VideoCatch:
                 # print(button_1080)
                 button_1080.click()
             except Exception as e:
-                logger.warning('Ad Detected ! Waiting ')
+                # logger.warning('Ad Detected ! Waiting ')
                 time.sleep(3)
                 logger.debug(e)  # logger
                 continue
@@ -156,7 +156,7 @@ class VideoCatch:
             # Catch BlockIOError
             logger.warning('Driver Locked ! Waiting...')
             # lock.close()
-            time.sleep(120)
+            time.sleep(30)
             logger.warning('Exit Waiting Driver Lock')
 
     def download_and_check(self, url, _num, retry=False):
