@@ -23,14 +23,14 @@ def get_sec(time_str):
     return int(h) * 3600 + int(m) * 60 + int(s)
 
 
-def get_crawl_list():
+def get_crawl_list(html):
 
     craw_list = []
     logger.info('Getting New Upload Page for 8 Page')
 
     for i in range(1, 8):
 
-        r = requests.get(HTML.format(i))
+        r = requests.get(html.format(i))
 
         if r.status_code == 200:
             content = r.content.decode('UTF-8')
@@ -58,8 +58,8 @@ def get_crawl_list():
     return craw_list
 
 
-def merge_status():
-    craw_list = get_crawl_list()
+def merge_status(html):
+    craw_list = get_crawl_list(html)
 
     new_df = pd.DataFrame(craw_list)
 
@@ -79,4 +79,4 @@ def merge_status():
 
 
 if __name__ == '__main__':
-    merge_status()
+    merge_status(html=HTML)
