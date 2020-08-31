@@ -99,7 +99,7 @@ class VideoCatch:
         # time.sleep(2)
         logger.info('PLAYING Button Click ')
         button = driver.find_element_by_class_name('vjs-big-play-button')
-        driver.execute_script('arguments[0].click();', button)
+        button.click()
         # time.sleep(5)
 
         # Find Change 畫質
@@ -109,7 +109,7 @@ class VideoCatch:
                 button_1080 = driver. \
                     find_element_by_css_selector('button.vjs-menu-button.vjs-menu-button-popup.vjs-icon-cog.vjs-button')
                 # print(button_1080)
-                driver.execute_script("arguments[0].click();", button_1080)
+                button_1080.click()
             except Exception as e:
                 # logger.warning('Ad Detected ! Waiting ')
                 time.sleep(3)
