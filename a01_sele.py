@@ -10,7 +10,8 @@ import math
 import sys
 import datetime
 from sqlalchemy import create_engine, Table, MetaData
-import fcntl
+# import fcntl
+import threading
 import random
 from ip import get_ip
 
@@ -55,6 +56,18 @@ def get_network_resources(_driver):
     return resources
 
 
+def p1080_or_720(driver):
+    p_1080 = driver.find_element_by_css_selector('div.vjs-menu.vjs-lock-showing')
+    p_1080 = p_1080.find_element_by_css_selector('ul.vjs-menu-content')
+
+    try:
+        logger.info('Change to 1080P')
+        p_1080.find_element_by_xpath('//span[text()="1080p"]').click()
+    except common.exceptions.NoSuchElementException:
+        logger.info('Change to 720P')
+        p_1080.find_element_by_xpath('//span[text()="720p"]').click()
+
+
 class VideoCatch:
 
     def __init__(self, url, sub_folder, chunk):
@@ -69,21 +82,10 @@ class VideoCatch:
         if not self.path.exists():
             self.path.mkdir(parents=True)
 
-        self.lock_file = folder_path / 'driver_lock'
+        self.lock = threading.Lock()
         self.retry_list = []
 
         self.file = self.path / self.file_name
-
-    def p1080_or_720(self, driver):
-        p_1080 = driver.find_element_by_css_selector('div.vjs-menu.vjs-lock-showing')
-        p_1080 = p_1080.find_element_by_css_selector('ul.vjs-menu-content')
-
-        try:
-            logger.info('Change to 1080P')
-            p_1080.find_element_by_xpath('//span[text()="1080p"]').click()
-        except common.exceptions.NoSuchElementException:
-            logger.info('Change to 720P')
-            p_1080.find_element_by_xpath('//span[text()="720p"]').click()
 
     def get_network_url(self):
 
@@ -115,7 +117,7 @@ class VideoCatch:
 
             break
 
-        self.p1080_or_720(driver)
+        p1080_or_720(driver)
         time.sleep(10)
 
         logger.info('Getting Network Resource Log')
@@ -137,31 +139,25 @@ class VideoCatch:
     def _retry_api_url(self):
         """
 
-        :return: Change class self.url
+        :return: Change class self.video_url
         """
 
-        while True:
-            lock = open(self.lock_file, 'wb')
-            try:
-                # logger.warning('Locking File {}'.format(self.lock_file))
+        lock = self.lock.acquire(timeout=5)
 
-                fcntl.lockf(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                self.get_network_url()
-                logger.warning('Getting New URL : {}'.format(self.video_url))
-                fcntl.lockf(lock, fcntl.LOCK_UN)
-                lock.close()
-                break
+        if lock:
+            logger.warning('Locking Driver !!!')
 
-            except Exception as e:
-                # Catch BlockIOError
-                logger.debug(e)
-                logger.warning('Driver Locked ! Waiting...')
-                # lock.close()
-                time.sleep(120)
-                logger.warning('Exit Waiting Driver Lock')
+            self.get_network_url()
+            logger.warning('Getting New URL : {}'.format(self.video_url))
 
-                lock.close()
-                break
+            self.lock.release()
+
+        else:
+            # Catch BlockIOError
+            logger.warning('Driver Locked ! Waiting...')
+            # lock.close()
+            time.sleep(120)
+            logger.warning('Exit Waiting Driver Lock')
 
     def download_and_check(self, url, _num, retry=False):
 
@@ -428,5 +424,5 @@ if __name__ == '__main__':
     logger.info('Now Crawling Name : {}'.format(rs[1]))
     logger.info('URL : {}'.format(rs[0]))
     size = math.ceil(rs[6] / 4)
-    v = VideoCatch(rs[0], rs[1], size)
-    v.run()
+    # v = VideoCatch(rs[0], rs[1], size)
+    # v.run()
