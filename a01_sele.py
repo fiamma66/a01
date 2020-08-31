@@ -150,10 +150,13 @@ class VideoCatch:
         if lock:
             logger.warning('Locking Driver !!!')
 
-            self.get_network_url()
-            logger.warning('Getting New URL : {}'.format(self.video_url))
-
-            self.lock.release()
+            try:
+                self.get_network_url()
+                logger.warning('Getting New URL : {}'.format(self.video_url))
+            except Exception as e:
+                logger.error(e)
+            finally:
+                self.lock.release()
 
         else:
             # Catch BlockIOError
