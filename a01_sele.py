@@ -156,6 +156,7 @@ class VideoCatch:
         except Exception as e:
             logger.debug(e)
             logger.error('Timeout For Ad !')
+            driver.close()
             return
 
         p1080_or_720(driver)
