@@ -4,6 +4,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as Ec
 import time
 import re
+import json
 import log
 import requests
 import pathlib
@@ -44,7 +45,8 @@ g_header = {
     'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,\
     image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
     'accept-encoding': 'gzip, deflate, br',
-    'accept-language': 'en-US,en;q=0.9,zh-TW;q=0.8,zh;q=0.7'
+    'accept-language': 'en-US,en;q=0.9,zh-TW;q=0.8,zh;q=0.7',
+    'Connection': 'close',
 
 }
 
@@ -201,7 +203,7 @@ class VideoCatch:
             # Catch BlockIOError
             logger.warning('Driver Locked ! Waiting...')
             # lock.close()
-            time.sleep(30)
+            time.sleep(120)
             logger.warning('Exit Waiting Driver Lock')
 
     def download_and_check(self, url, _num, retry=False):
@@ -257,6 +259,8 @@ class VideoCatch:
             # 429 too many requests
             # Change request api url
             logger.warning('Too Many Requests on Current API : {}'.format(self.video_url))
+            logger.warning('Response Header : ')
+            logger.warning(json.dumps(dict(h.headers), indent=3))
             self._retry_api_url()
 
             self.download_and_check(url, _num)
