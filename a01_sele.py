@@ -1,4 +1,7 @@
 from selenium import webdriver, common
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as Ec
 import time
 import re
 import log
@@ -71,6 +74,11 @@ class VideoCatch:
     options.add_argument("--headless")
     options.add_argument("--window-size=2560,1440")
 
+    class_to_use = 'video-container video-js vjs-16-9 vjs-default-skin \
+    vjs-big-play-centered vjs-controls-enabled vjs-workinghover vjs-v7 \
+    vjs-http-source-selector vjs-seek-buttons vjs-has-started my-video-dimensions \
+    vjs-vtt-thumbnails vjs-paused vjs-user-active'
+
     def __init__(self, url, sub_folder, chunk):
         self.max_range = chunk
         self.url = url
@@ -104,20 +112,40 @@ class VideoCatch:
         # time.sleep(5)
 
         # Find Change 畫質
-        while True:
-            try:
-                # print('find 1080')
-                button_1080 = driver. \
-                    find_element_by_css_selector('button.vjs-menu-button.vjs-menu-button-popup.vjs-icon-cog.vjs-button')
-                # print(button_1080)
-                button_1080.click()
-            except Exception as e:
-                # logger.warning('Ad Detected ! Waiting ')
-                time.sleep(3)
-                logger.debug(e)  # logger
-                continue
+        try:
+            wait = WebDriverWait(driver, 120)
+            user_active = wait.until(
+                Ec.presence_of_element_located(
+                    (By.ID, 'my-video')
+                )
+            )
 
-            break
+            wait.until(
+                Ec.presence_of_element_located(
+                    (By.XPATH, '//button[@class="vjs-menu-button vjs-menu-button-popup vjs-icon-cog vjs-button"]')
+                )
+            )
+
+            logger.info('Setting Attribute')
+            driver.execute_script(
+                "arguments[0].setAttribute('class','{}')".format(self.class_to_use),
+                user_active
+            )
+
+            logger.info('Checking Attribute @ Class : {}'.format(user_active.get_attribute('class')))
+
+            change_button = wait.until(
+                Ec.element_to_be_clickable(
+                    (By.XPATH, '//button[@class="vjs-menu-button vjs-menu-button-popup vjs-icon-cog vjs-button"]')
+                )
+            )
+
+            change_button.click()
+
+        except Exception as e:
+            logger.debug(e)
+            logger.error('Timeout For Ad !')
+            return
 
         p1080_or_720(driver)
         time.sleep(10)
