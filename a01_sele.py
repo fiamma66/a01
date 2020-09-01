@@ -78,6 +78,7 @@ class VideoCatch:
     vjs-big-play-centered vjs-controls-enabled vjs-workinghover vjs-v7 \
     vjs-http-source-selector vjs-seek-buttons vjs-has-started my-video-dimensions \
     vjs-vtt-thumbnails vjs-paused vjs-user-active'
+    class_to_use = re.sub(r' +', ' ', class_to_use)
 
     def __init__(self, url, sub_folder, chunk):
         self.max_range = chunk
@@ -99,6 +100,7 @@ class VideoCatch:
     def get_network_url(self):
 
         driver = webdriver.Chrome(options=self.options)
+        wait = WebDriverWait(driver, 120)
 
         logger.info('Initializing Selenium Driver Open Page')
 
@@ -106,14 +108,20 @@ class VideoCatch:
         logger.info('Success Open Page ')
 
         # time.sleep(2)
-        logger.info('PLAYING Button Click ')
-        button = driver.find_element_by_class_name('vjs-big-play-button')
+        button = wait.until(
+            Ec.element_to_be_clickable(
+                (By.CSS_SELECTOR, 'button.vjs-big-play-button')
+            )
+        )
+
         button.click()
+        logger.info('PLAYING Button Click ')
+        # button = driver.find_element_by_class_name('vjs-big-play-button')
+        # button.click()
         # time.sleep(5)
 
         # Find Change 畫質
         try:
-            wait = WebDriverWait(driver, 120)
             user_active = wait.until(
                 Ec.presence_of_element_located(
                     (By.ID, 'my-video')
