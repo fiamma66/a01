@@ -133,7 +133,7 @@ class VideoCatch:
                 )
             )
 
-            wait.until(
+            change_button = wait.until(
                 Ec.presence_of_element_located(
                     (By.XPATH, '//button[@class="vjs-menu-button vjs-menu-button-popup vjs-icon-cog vjs-button"]')
                 )
@@ -146,14 +146,12 @@ class VideoCatch:
             )
 
             logger.info('Checking Attribute @ Class : {}'.format(user_active.get_attribute('class')))
-
-            change_button = wait.until(
-                Ec.element_to_be_clickable(
-                    (By.XPATH, '//button[@class="vjs-menu-button vjs-menu-button-popup vjs-icon-cog vjs-button"]')
-                )
-            )
-
-            change_button.click()
+            try:
+                change_button.click()
+            except Exception as e:
+                logger.debug(e)
+                logger.error('Cant Click on Change Button, Using JavaScript !')
+                driver.execute_script("arguments[0].click();", change_button)
 
         except Exception as e:
             logger.debug(e)
