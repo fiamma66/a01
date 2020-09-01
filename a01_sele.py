@@ -79,7 +79,7 @@ class VideoCatch:
     vjs-big-play-centered vjs-controls-enabled vjs-workinghover vjs-v7 \
     vjs-http-source-selector vjs-seek-buttons vjs-has-started my-video-dimensions \
     vjs-vtt-thumbnails vjs-paused vjs-user-active'
-    class_to_use = re.sub(r' +', ' ', class_to_use)
+    # class_to_use = re.sub(r' +', ' ', class_to_use)
 
     def __init__(self, url, sub_folder, chunk):
         self.max_range = chunk
