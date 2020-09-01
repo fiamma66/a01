@@ -132,6 +132,7 @@ class VideoCatch:
                     (By.ID, 'my-video')
                 )
             )
+            time.sleep(7)
 
             wait.until(
                 Ec.presence_of_element_located(
