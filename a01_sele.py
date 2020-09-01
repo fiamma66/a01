@@ -38,7 +38,6 @@ folder_path = pathlib.Path('av01')
 url_pattern = re.compile(r'(https?://cdn\.av01\.tv/v[0-9]/[0-9]*[a-z]*/.*/[a-z]*/[a-z]*[0-9]*[a-z]*-)([0-9]*)(-.*)',
                          re.IGNORECASE)
 
-
 g_header = {
     'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) \
     Chrome/84.0.4147.125 Safari/537.36',
@@ -298,7 +297,7 @@ class VideoCatch:
 
         # return 'Done'
 
-    def run(self):
+    def run_normal(self):
         self.get_network_url()
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=10, thread_name_prefix='Crawl_Thread') as w:
@@ -393,7 +392,7 @@ class VideoCatch:
         duration = datetime.timedelta(seconds=float(second))
         timestamp = str(datetime.datetime.now())
 
-        smt = jav.update().where(jav.columns.name == self.name).\
+        smt = jav.update().where(jav.columns.name == self.name). \
             values({'status': 'Y', 'duration': str(duration), 'finish time': timestamp})
         logger.info('Executing Update')
         with engine.connect() as connection:
@@ -414,7 +413,7 @@ class VideoCatch:
             'rsync',
             '-e',
             'ssh -o StrictHostKeyChecking=no',
-            '-avrh',
+            '-savrh',
             '{}'.format(str(self.path.absolute())),
             '{}@{}:{}'.format(main_user, main_host, str(self.path.absolute())),
         ]
@@ -447,16 +446,47 @@ class VideoCatch:
 
         self._post_scp()
 
+    def run(self, mode, chunk_num=0):
+        if mode == 'normal':
+            self.run_normal()
 
-if __name__ == '__main__':
+        elif mode == 'sp':
+            self.run_normal()
 
-    statement = jav.select().with_for_update().where(jav.columns.status == 'N').\
-        order_by(jav.columns['update time'].desc()).limit(1)
+        else:
+            logger.info('SP_RETRY from chunk_num : {}'.format(chunk_num))
+            self.sp_rerun(chunk_num)
+
+
+def main(mode='normal', sp_name=None, chunk_num=0):
+    mode = mode.lower()
+
+    if mode == 'normal':
+        statement = jav.select().with_for_update().where(jav.columns.status == 'N'). \
+            order_by(jav.columns['update time'].desc()).limit(1)
+
+    elif mode == 'sp':
+        logger.info('Running In sp_select Mode')
+        if not sp_name:
+            raise RuntimeError('In SP mode, Name must be provided !')
+        statement = jav.select().with_for_update().where(jav.columns.name.like(sp_name)). \
+            order_by(jav.columns['update time'].desc()).limit(1)
+
+    else:
+        logger.info('Running In sp_retry Mode')
+        # Mode Only in sp_retry
+        if not sp_name:
+            raise RuntimeError('In SP_retry mode, Name must be provided !')
+        if chunk_num == 0:
+            raise RuntimeError('In SP_retry mode, Chunk Must Not Be 0 !')
+        statement = jav.select().with_for_update().where(jav.columns.name.like(sp_name)). \
+            order_by(jav.columns['update time'].desc()).limit(1)
+
     logger.info('Connecting DB')
     with engine.connect() as con:
+
         result = con.execute(statement)
 
-    # href, name, status, duration
         rs = [row for row in result]
 
         if len(rs) > 0:
@@ -466,12 +496,17 @@ if __name__ == '__main__':
             sys.exit(0)
 
         rs = rs[0]
-        update_st = jav.update().where(jav.columns.name == rs[1]).\
+        update_st = jav.update().where(jav.columns.name == rs[1]). \
             values({'status': 'P', 'update time': str(datetime.datetime.now())})
-        result = con.execute(update_st)
+        con.execute(update_st)
 
     logger.info('Now Crawling Name : {}'.format(rs[1]))
     logger.info('URL : {}'.format(rs[0]))
     size = math.ceil(rs[6] / 4)
     v = VideoCatch(rs[0], rs[1], size)
-    v.run()
+
+    v.run(mode=mode, chunk_num=chunk_num)
+
+
+if __name__ == '__main__':
+    main()
