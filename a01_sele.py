@@ -113,8 +113,12 @@ class VideoCatch:
                 (By.CSS_SELECTOR, 'button.vjs-big-play-button')
             )
         )
+        try:
+            button.click()
+        except Exception as e:
+            logger.debug(e)
+            driver.execute_script("arguments[0].click();", button)
 
-        button.click()
         logger.info('PLAYING Button Click ')
         # button = driver.find_element_by_class_name('vjs-big-play-button')
         # button.click()
@@ -187,7 +191,7 @@ class VideoCatch:
 
             try:
                 self.get_network_url()
-                logger.warning('Getting New URL : {}'.format(self.video_url))
+                # logger.warning('Getting New URL : {}'.format(self.video_url))
             except Exception as e:
                 logger.error(e)
             finally:
@@ -293,7 +297,7 @@ class VideoCatch:
     def run(self):
         self.get_network_url()
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=13, thread_name_prefix='Crawl_Thread') as w:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10, thread_name_prefix='Crawl_Thread') as w:
             future = {w.submit(self.download_and_check,
                                self.video_url.format(i),
                                i) for i in range(1, self.max_range)}
