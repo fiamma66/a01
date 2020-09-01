@@ -212,6 +212,7 @@ class VideoCatch:
     def download_and_check(self, url, _num, retry=False):
 
         # Downloading
+        time.sleep(random.randint(1,5))
         logger.debug('Getting Chunk Number : {}'.format(_num))
         if _num % 100 == 0:
             logger.info('Chunk Now Reach : {}'.format(_num))
