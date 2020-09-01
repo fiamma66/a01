@@ -101,7 +101,7 @@ class VideoCatch:
     def get_network_url(self):
 
         driver = webdriver.Chrome(options=self.options)
-        wait = WebDriverWait(driver, 120)
+        wait = WebDriverWait(driver, 80)
 
         logger.info('Initializing Selenium Driver Open Page')
 
@@ -133,7 +133,7 @@ class VideoCatch:
                 )
             )
 
-            change_button = wait.until(
+            wait.until(
                 Ec.presence_of_element_located(
                     (By.XPATH, '//button[@class="vjs-menu-button vjs-menu-button-popup vjs-icon-cog vjs-button"]')
                 )
@@ -146,6 +146,11 @@ class VideoCatch:
             )
 
             logger.info('Checking Attribute @ Class : {}'.format(user_active.get_attribute('class')))
+            change_button = wait.until(
+                Ec.presence_of_element_located(
+                    (By.XPATH, '//button[@class="vjs-menu-button vjs-menu-button-popup vjs-icon-cog vjs-button"]')
+                )
+            )
             try:
                 change_button.click()
             except Exception as e:
