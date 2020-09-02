@@ -73,7 +73,7 @@ class VideoCatch:
     options = webdriver.ChromeOptions()
     options.add_argument("--enable-javascript")
     options.add_argument("--headless")
-    options.add_argument("--window-size=2560,1440")
+    options.add_argument("--window-size=1920,1080")
 
     class_to_use = 'video-container video-js vjs-16-9 vjs-default-skin \
     vjs-big-play-centered vjs-controls-enabled vjs-workinghover vjs-v7 \
@@ -207,13 +207,13 @@ class VideoCatch:
             # Catch BlockIOError
             logger.warning('Driver Locked ! Waiting...')
             # lock.close()
-            time.sleep(120)
+            time.sleep(random.random() * 180)
             logger.warning('Exit Waiting Driver Lock')
 
     def download_and_check(self, url, _num, retry=False):
 
         # Downloading
-        time.sleep(random.randint(1,5))
+        time.sleep(random.random() * 10)
         logger.debug('Getting Chunk Number : {}'.format(_num))
         if _num % 100 == 0:
             logger.info('Chunk Now Reach : {}'.format(_num))
@@ -276,7 +276,7 @@ class VideoCatch:
                 # logger.error(h.content)
 
                 logger.warning('Retry')
-                time.sleep(random.randint(3, 10))
+                # time.sleep(random.randint(3, 10))
                 logger.warning('Retry Chunk : {}'.format(_num))
                 # self.download_and_check(self.url.format(_num), _num)
                 # self.max_range = _num
@@ -434,7 +434,7 @@ class VideoCatch:
     def sp_rerun(self, sp):
         self.get_network_url()
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=13, thread_name_prefix='Crawl_Thread') as w:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10, thread_name_prefix='Crawl_Thread') as w:
             future = {w.submit(self.download_and_check,
                                self.video_url.format(i),
                                i) for i in range(sp, self.max_range)}
