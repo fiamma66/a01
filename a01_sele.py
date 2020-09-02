@@ -4,7 +4,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as Ec
 import time
 import re
-import json
+# import json
 import log
 import requests
 import pathlib
@@ -264,8 +264,8 @@ class VideoCatch:
             # 429 too many requests
             # Change request api url
             logger.warning('Too Many Requests on Current API : {}'.format(self.video_url))
-            logger.warning('Response Header : ')
-            logger.warning(json.dumps(dict(h.headers), indent=3))
+            # logger.warning('Response Header : ')
+            # logger.warning(json.dumps(dict(h.headers), indent=3))
             self._retry_api_url()
 
             self.download_and_check(url, _num)
